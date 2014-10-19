@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html lang="pl">
 <head>
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/font-awesome.css">
@@ -20,19 +21,19 @@
 		<form method="post">
 			<?php /*echo ('<input type="submit" value="' . $pageC . '" placeholder="Następna strona" class="btn btn-default">'); */?>
 		</form>
-		<form class="navbar-form navbar-right">
+		<form class="navbar-form navbar-right" id="tag-form">
 			<div class="form-group">
-				<form method="GET">
-					<input type="text" class="form-control" name="tag" placeholder="Wpisz Nazwę #tagu">
-					<input type="submit" class="btn btn-default">
-				</form>
+				<input type="text" id="tag-form-name" class="form-control" name="tag" placeholder="Wpisz Nazwę #tagu">
+				<input type="submit" class="btn btn-default">
 			</div>
-
 		</form>
-
 	</div>
 </nav>
-<div class="container">
+<div class="container" id="img-container">
 	<?php echo $imgHtml ?>
 </div>
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="js/imgloader.js"></script>
 </body>
+</html>
