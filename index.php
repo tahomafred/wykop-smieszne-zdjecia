@@ -1,80 +1,73 @@
-<!DOCTYPE html>
-<head>
-    <link rel="stylesheet" href="css/bootstrap.css">
-    <link rel="stylesheet" href="css/font-awesome.css">
-    <link rel="stylesheet" href="css/style.css">
-    <meta charset="UTF-8">
-</head>
-<body>
+<?php
+define('MAIN_DIR', dirname(__FILE__));
 
-<nav class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container-fluid">
-        <!-- Brand and toggle get grouped for better mobile display -->
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse"
-                    data-target="#bs-example-navbar-collapse-1">
-                <span class="sr-only">Toggle navigation</span>
-            </button>
-            <a class="navbar-brand" href="#">Wykop Śmieszne Zdjęcia</a>
-        </div>
-        <form method="post">
-            <?php /*echo ('<input type="submit" value="' . $pageC . '" placeholder="Następna strona" class="btn btn-default">'); */?>
-        </form>
-        <form class="navbar-form navbar-right">
-            <div class="form-group">
-                <form method="GET">
-                    <input type="text" class="form-control" name="tag" placeholder="Wpisz Nazwę #tagu">
-                    <input type="submit" class="btn btn-default">
-                </form>
-            </div>
+include('libs/Wapi.php');
+include('libs/Input.php');
+include('libs/View.php');
 
-        </form>
+Input::init();
 
-    </div>
-</nav>
-<div class="container">
-    <?php
-    function clean($string)
-    {
-        $string = str_replace(' ', '-', $string); // Replaces all spaces with hyphens.
+//TODO: routing
 
-        return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
-    }
+function cleanStr($string) {
+	$string = str_replace(' ', '-', $string); // Replaces all spaces with hyphens.
 
-    function loadPage($tag, $pageCount, $imgCount)
-    {
-        $wapi = new libs_Wapi('RhlrYpS1MM', 'MrktNTguBl');
-        $result = $wapi->doRequest('search/entries/page/' . $pageCount, array('q' => $tag));
-        if ($wapi->isValid()) {
-            foreach ($result as $r) {
-                $r = $r['embed'];
-                if (!is_null($r) && $r['type'] == 'image') {
-                    print "<a href='" . $r['url'] . "'><img class='block img.responsive img-rounded' src='" . $r['preview'] . "'></a>";
-                    $imgCount++;
-                }
-            }
+	return preg_replace('/[^A-Za-z0-9\-]/', '', $string); // Removes special chars.
+}
 
-        } else {
-            echo $wapi->getError();
-        };
-    };
+function loadPage($tag, $page) {
+	$wapi   = new libs_Wapi('RhlrYpS1MM', 'MrktNTguBl');
+	$result = $wapi->doRequest('search/entries/page/' . $page, array('q' => $tag));
 
+	$return = [];
 
+	if($wapi->isValid()) {
+		foreach($result as $r) {
+			$r = $r['embed'];
 
-    $pageC = 1;
-    $imgCount = 1;
-    @$tag = '#' . clean($_GET['tag']);
-    $maxPage = 10;
-    include('libs/Wapi.php');
-    if ($tag != NULL) {
+			if($r && $r['type'] == 'image') {
+				$return[] = array(
+					'url'       => $r['url'],
+					'thumbnail' => $r['preview']
+				);
+				//print "<a href='" . $r['url'] . "'><img class='block img.responsive img-rounded' src='" . $r['preview'] . "'></a>";
+			}
+		}
 
-        loadPage($tag, $pageC, $imgCount);
-        var_dump ($pageC);
-        $pageC++;
-        loadPage($tag, $pageC, $imgCount);
-        var_dump ($pageC);
+	} else {
+		echo $wapi->getError();
+	}
 
-    };
-    ?>
-</div>
-</body>
+	return $return;
+}
+
+$imgData = null;
+
+if($tag = Input::get('tag')) {
+
+	if(!$page = (int) Input::get('page')) {
+		$page = 1;
+	}
+
+	$tag     = '#' . cleanStr($tag);
+	$maxPage = 10;
+
+	$imgData = loadPage($tag, $page);
+
+}
+
+if(Input::get('json')) {
+	header('Content-Type: application/json');
+	echo json_encode($imgData);
+}
+else {
+	$imgHtml = '';
+
+	foreach($imgData as $img) {
+		$imgHtml .= '<a href="' . $img["url"] . '"><img class="block img.responsive img-rounded" src="' . $img['thumbnail'] . '"></a>';
+	}
+
+	View::render('index', array(
+		'imgHtml' => $imgHtml,
+	));
+}
