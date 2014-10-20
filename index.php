@@ -1,9 +1,10 @@
 <?php
 define('MAIN_DIR', dirname(__FILE__));
 
-include('libs/Wapi.php');
-include('libs/Input.php');
-include('libs/View.php');
+include('libs/Autoloader.php');
+$autoloader = new Autoloader();
+$autoloader->addDirs('libs');
+$autoloader->register();
 
 Input::init();
 
@@ -41,7 +42,7 @@ function loadPage($tag, $page) {
 	return $return;
 }
 
-$imgData = null;
+$imgData = [];
 
 if($tag = Input::get('tag')) {
 
